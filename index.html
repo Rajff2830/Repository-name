@@ -1,204 +1,162 @@
-import 'package:flutter/material.dart';
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>R Portal [Elite]</title>
+    <!-- Tailwind CSS for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+    </style>
+</head>
+<body class="h-screen flex flex-col justify-between select-none">
 
-void main() {
-  runApp(RPortalApp());
-}
+    <!-- App Bar -->
+    <header class="bg-neutral-900 border-b border-neutral-800 px-4 py-3 flex justify-between items-center shadow-md">
+        <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 rounded-full border-2 border-red-500 bg-neutral-950 flex items-center justify-center font-bold text-red-500 shadow-inner">
+                R
+            </div>
+            <h1 class="text-red-500 font-bold text-lg tracking-wide">R Portal <span class="text-xs text-neutral-400">[Elite]</span></h1>
+        </div>
+        <div>
+            <span id="member-counter" class="text-green-400 font-bold text-xs bg-neutral-950 px-3 py-1 rounded-full border border-neutral-800">
+                Members: 49,999 / 50,000
+            </span>
+        </div>
+    </header>
 
-class RPortalApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'R Portal',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primaryColor: Colors.redAccent,
-        scaffoldBackgroundColor: Colors.black,
-      ),
-      home: PortalHomeScreen(),
-    );
-  }
-}
+    <!-- Chat Messages Container -->
+    <main id="chat-container" class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- Initial Bot Message -->
+        <div class="flex justify-start">
+            <div class="bg-neutral-800 text-white p-3 rounded-lg max-w-xs md:max-w-md shadow">
+                <p class="text-sm">राजवीर के R Portal में स्वागत है। बताइए, कौन सी आईडी, मैक्स गन या ओल्ड बंडल चाहिए?</p>
+            </div>
+        </div>
+    </main>
 
-class PortalHomeScreen extends StatefulWidget {
-  @override
-  _PortalHomeScreenState createState() => _PortalHomeScreenState();
-}
+    <!-- House Full Banner or Input Box -->
+    <footer id="footer-section" class="bg-neutral-900 border-t border-neutral-800 p-3">
+        <!-- Input Form -->
+        <div id="input-box-container" class="flex items-center space-x-2">
+            <input id="user-input" type="text" placeholder="अपनी डिमांड यहाँ टाइप करें..." 
+                class="flex-1 bg-neutral-950 text-white placeholder-neutral-500 px-4 py-2 rounded-lg border border-neutral-800 focus:outline-none focus:border-red-500 text-sm">
+            <button onclick="sendMessage()" class="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-lg transition flex items-center justify-center">
+                <i class="fa-solid fa-paper-plane text-sm"></i>
+            </button>
+        </div>
 
-class _PortalHomeScreenState extends State<PortalHomeScreen> {
-  // यहाँ लाइव मेंबर्स की संख्या ट्रैक होगी (मैक्स लिमिट 50,000)
-  int currentMembers = 49999; 
-  final int maxLimit = 50000;
+        <!-- House Full Alert (Hidden by default) -->
+        <div id="house-full-banner" class="hidden bg-red-900 text-white text-center font-bold py-3 rounded-lg text-sm shadow-inner">
+            ⚠️ HOUSE FULL - 50,000 LIMIT REACHED (नए एंट्री बंद हैं!)
+        </div>
+    </footer>
 
-  final TextEditingController _controller = TextEditingController();
-  final List<ChatMessage> _messages = [
-    ChatMessage(
-      text: "राजवीर के R Portal में स्वागत है। बताइए, कौन सी आईडी, मैक्स गन या ओल्ड बंडल चाहिए?",
-      isBot: true,
-    ),
-  ];
+    <!-- JavaScript Logic -->
+    <script>
+        let currentMembers = 49999;
+        const maxLimit = 50000;
 
-  void _sendMessage(String text) {
-    if (text.isEmpty) return;
+        const chatContainer = document.getElementById('chat-container');
+        const userInput = document.getElementById('user-input');
+        const memberCounter = document.getElementById('member-counter');
+        const inputBoxContainer = document.getElementById('input-box-container');
+        const houseFullBanner = document.getElementById('house-full-banner');
 
-    // 50,000 लिमिट पूरी होने पर नया रजिस्ट्रेशन लॉक करने का लॉजिक
-    if (currentMembers >= maxLimit) {
-      setState(() {
-        _messages.add(ChatMessage(
-          text: "⚠️ [House Full]: 50,000 की लिमिट पूरी हो चुकी है। अब नए एंट्री बंद हैं!",
-          isBot: true,
-        ));
-      });
-      return;
-    }
+        // Enter key support
+        userInput.addEventListener("keypress", function(event) {
+            if (event.key === "Enter") {
+                sendMessage();
+            }
+        });
 
-    setState(() {
-      _messages.add(ChatMessage(text: text, isBot: false));
-    });
+        function updateStatus() {
+            memberCounter.innerText = `Members: ${currentMembers.toLocaleString()} / ${maxLimit.toLocaleString()}`;
+            if (currentMembers >= maxLimit) {
+                memberCounter.className = "text-red-500 font-bold text-xs bg-neutral-950 px-3 py-1 rounded-full border border-neutral-800";
+                inputBoxContainer.classList.add('hidden');
+                houseFullBanner.classList.remove('hidden');
+            }
+        }
 
-    _controller.clear();
+        function sendMessage() {
+            const text = userInput.value.trim();
+            if (text === "") return;
 
-    // AI बॉट का रिस्पॉन्स लॉजिक (करेंट लॉबी और रियल प्रूफ के साथ)
-    Future.delayed(Duration(seconds: 1), () {
-      setState(() {
-        _messages.add(ChatMessage(
-          text: "यह लीजिए भाई, एकदम फ्रेश और 100% रियल लॉबी वीडियो प्रूफ। पूरी तरह वेरीफाइड!",
-          isBot: true,
-          hasMedia: true,
-        ));
-      });
-    });
-  }
+            if (currentMembers >= maxLimit) {
+                appendBotMessage("⚠️ [House Full]: 50,000 की लिमिट पूरी हो चुकी है। अब नए एंट्री बंद हैं!");
+                updateStatus();
+                return;
+            }
 
-  @override
-  Widget build(BuildContext context) {
-    bool isHouseFull = currentMembers >= maxLimit;
+            // Append User Message
+            appendUserMessage(text);
+            userInput.value = "";
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            // यहाँ आपका R-Shield लोगो सेट होगा
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: Colors.redAccent, width: 2),
-                color: Colors.grey[900],
-              ),
-              child: Center(child: Text("R", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold))),
-            ),
-            SizedBox(width: 10),
-            Text("R Portal [Elite]", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-          ],
-        ),
-        backgroundColor: Colors.grey[900],
-        actions: [
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Text(
-                "Members: $currentMembers/$maxLimit",
-                style: TextStyle(color: isHouseFull ? Colors.red : Colors.greenAccent, fontWeight: FontWeight.bold, fontSize: 12),
-              ),
-            ),
-          )
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              padding: EdgeInsets.all(10.0),
-              itemCount: _messages.length,
-              itemBuilder: (context, index) {
-                return _messages[index];
-              },
-            ),
-          ),
-          isHouseFull
-              ? Container(
-                  padding: EdgeInsets.all(16.0),
-                  color: Colors.red[900],
-                  child: Center(
-                    child: Text(
-                      "HOUSE FULL - 50,000 LIMIT REACHED",
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14),
-                    ),
-                  ),
-                )
-              : Container(
-                  padding: EdgeInsets.symmetric(horizontal: 8.0),
-                  color: Colors.grey[900],
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _controller,
-                          decoration: InputDecoration(
-                            hintText: "अपनी डिमांड यहाँ टाइप करें...",
-                            hintStyle: TextStyle(color: Colors.grey),
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.send, color: Colors.redAccent),
-                        onPressed: () => _sendMessage(_controller.text),
-                      ),
-                    ],
-                  ),
-                ),
-        ],
-      ),
-    );
-  }
-}
+            // Simulate Bot Response with Video Proof
+            setTimeout(() => {
+                appendBotMediaMessage("यह लीजिए भाई, एकदम फ्रेश और 100% रियल लॉबी वीडियो प्रूफ। पूरी तरह वेरीफाइड!");
+            }, 1000);
+        }
 
-class ChatMessage extends StatelessWidget {
-  final String text;
-  final bool isBot;
-  final bool hasMedia;
+        function appendUserMessage(text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "flex justify-end";
+            msgDiv.innerHTML = `
+                <div class="bg-red-900 text-white p-3 rounded-lg max-w-xs md:max-w-md shadow">
+                    <p class="text-sm">${escapeHtml(text)}</p>
+                </div>
+            `;
+            chatContainer.appendChild(msgDiv);
+            scrollToBottom();
+        }
 
-  ChatMessage({required this.text, required this.isBot, this.hasMedia = false});
+        function appendBotMessage(text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "flex justify-start";
+            msgDiv.innerHTML = `
+                <div class="bg-neutral-800 text-white p-3 rounded-lg max-w-xs md:max-w-md shadow">
+                    <p class="text-sm">${escapeHtml(text)}</p>
+                </div>
+            `;
+            chatContainer.appendChild(msgDiv);
+            scrollToBottom();
+        }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: EdgeInsets.symmetric(vertical: 8.0),
-      alignment: isBot ? Alignment.centerLeft : Alignment.centerRight,
-      child: Container(
-        padding: EdgeInsets.all(12.0),
-        decoration: BoxDecoration(
-          color: isBot ? Colors.grey[850] : Colors.red[900],
-          borderRadius: BorderRadius.circular(8.0),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(text, style: TextStyle(color: Colors.white)),
-            if (hasMedia) ...[
-              SizedBox(height: 8.0),
-              Container(
-                height: 140,
-                width: 200,
-                color: Colors.black54,
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(Icons.play_circle_fill, size: 40, color: Colors.redAccent),
-                      SizedBox(height: 4),
-                      Text("Real Lobby Video Proof", style: TextStyle(fontSize: 10, color: Colors.grey))
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
+        function appendBotMediaMessage(text) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = "flex justify-start";
+            msgDiv.innerHTML = `
+                <div class="bg-neutral-800 text-white p-3 rounded-lg max-w-xs md:max-w-md shadow space-y-2">
+                    <p class="text-sm">${escapeHtml(text)}</p>
+                    <div class="h-36 w-48 bg-black/60 rounded flex flex-col items-center justify-center border border-neutral-700">
+                        <i class="fa-solid fa-circle-play text-3xl text-red-500 mb-1"></i>
+                        <span class="text-[10px] text-neutral-400">Real Lobby Video Proof</span>
+                    </div>
+                </div>
+            `;
+            chatContainer.appendChild(msgDiv);
+            scrollToBottom();
+        }
+
+        function scrollToBottom() {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // Security helper to prevent HTML injection
+        function escapeHtml(string) {
+            return string.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+        }
+
+        updateStatus();
+    </script>
+</body>
+</html>
